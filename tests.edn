@@ -1,0 +1,4 @@
+#kaocha/v1
+{:tests [{:id          :property
+          :ns-patterns ["-properties$"]
+          :test-paths  ["test"]}]}
