@@ -1,6 +1,6 @@
 (ns graph-traversal.core-test
   (:require [clojure.test :refer :all]
-            [graph-traversal.core :refer :all]))
+            [graph-traversal.algorithms :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."

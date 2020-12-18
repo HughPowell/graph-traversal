@@ -1,4 +1,4 @@
-(ns graph-traversal.core)
+(ns graph-traversal.algorithms)
 
 (defn foo
   "I don't do a whole lot."
