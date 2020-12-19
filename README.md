@@ -1,10 +1,26 @@
 # graph-traversal
 
-A Clojure library designed to ... well, that part is up to you.
+Algorithms for graph traversal (don't use this, use [Loom](https://github.com/aysylu/loom) instead)
 
 ## Usage
 
-FIXME
+[![Build Status](https://travis-ci.com/HughPowell/graph-traversal.svg?branch=main)](https://travis-ci.com/HughPowell/graph-traversal)
+
+Designed to be run from the REPL,
+
+```shell
+lein repl
+```
+
+There are 2 namespaces, `graph-traversal.graph` and `graph-traversal.algorithm`.
+
+To generate a random graph with 5 vertices and 10 edges
+
+```clojure
+(require '[graph-traversal.graph :as graph])
+
+(graph/random-graph 5 10)
+```
 
 ## License
 
