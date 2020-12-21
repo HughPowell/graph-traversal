@@ -32,7 +32,8 @@ To find the shortest path between two vertices using Djikstra's algorithm
             :4)
 => (:1 :3 :4)
 ```
-If there is no path between the start and finish vertices then `:inifinty` is returned.
+If there is no path between the start and finish vertices then an empty vector,
+`[]`, is returned.
 
 To find the eccentricity of a vertex in a graph
 

@@ -66,14 +66,11 @@
             [graph graph-gen
              start (test-check-gen/elements (keys graph))
              finish (test-check-gen/elements (keys graph))]
-            (let [path (sut/djikstras graph start finish)]
-              (if (connected? graph start finish)
-                (is (set/subset?
-                      (set path)
-                      (set (keys graph))))
-                (is (= :infinity path)))))
+            (is (set/subset?
+                  (set (sut/djikstras graph start finish))
+                  (set (keys graph)))))
 
-  (checking "that starts at the start and finishes at the finish" 100
+  (checking "that starts at the start and finishes at the finish when start and finished are connected" 100
             [graph graph-gen
              start (test-check-gen/elements (keys graph))
              finish (test-check-gen/elements (keys graph))]
@@ -81,32 +78,26 @@
               (if (connected? graph start finish)
                 (is (and (= start (first path))
                          (= finish (last path))))
-                (is (= :infinity path)))))
+                (is (empty? path)))))
 
-  (checking "or :infinity if one does not exist" 100
+  (checking "using a legal path through the graph" 100
             [graph graph-gen
              start (test-check-gen/elements (keys graph))
              finish (test-check-gen/elements (keys graph))]
-            (let [path (sut/djikstras graph start finish)]
-              (if (connected? graph start finish)
-                (is (every? (fn [[from to]]
-                              (contains? (set (map first (get graph from))) to))
-                            (partition 2 1 path)))
-                (is (= :infinity path)))))
+            (is (every? (fn [[from to]]
+                          (contains? (set (map first (get graph from))) to))
+                        (partition 2 1 (sut/djikstras graph start finish)))))
 
   (checking "where there is no path shorter between the two" 100
             [graph graph-gen
              start (test-check-gen/elements (keys graph))
              finish (test-check-gen/elements (keys graph))]
-            (let [path (sut/djikstras graph start finish)]
-              (if (connected? graph start finish)
-                (is (not (shorter-path? graph start finish path)))
-                (is (= :infinity path))))))
+            (is (not (shorter-path? graph start finish (sut/djikstras graph start finish))))))
 
-(defn traversal [graph start]
+(defn traversal-paths [graph start]
   (loop [frontier [start]
          explored #{}
-         paths {start [[start 0]]}]
+         paths (assoc (into {} (map (fn [vertex] [vertex [[start ##Inf]]]) (keys graph))) start [[start 0]])]
     (let [current (peek frontier)
           unexplored-vertices (remove (fn [[vertex]] (contains? explored vertex)) (get graph current))]
       (if (empty? frontier)
@@ -123,22 +114,20 @@
   ;; TODO: I _think_ these don't provide complete coverage. Are there properties that would?
   ;; TODO: This test is a little on the slow side. What optimisations are possible?
 
-  (checking "is infinite if the graph is disconnected and not if it isn't" 100
+  (checking "is infinite if the graph is disconnected and finite if it isn't" 100
             [graph graph-gen
              vertex (test-check-gen/elements (keys graph))]
             (let [eccentricity (sut/eccentricity graph vertex)]
               (if (every? #(connected? graph vertex %) (keys graph))
-                (is (not (= :infinity eccentricity)))
-                (is (= :infinity eccentricity)))))
+                (is (not= ##Inf eccentricity))
+                (is (= ##Inf eccentricity)))))
 
   (checking "is at most as long as the longest path with the fewest edges" 100
             [graph graph-gen
              vertex (test-check-gen/elements (keys graph))]
             (let [eccentricity (sut/eccentricity graph vertex)
-                  traversal-paths (traversal graph vertex)]
-              (if (= :infinity eccentricity)
-                (is (> (count (keys graph)) (count (set (mapcat #(map first %) traversal-paths)))))
-                (is (>= (last (sort (map path-length traversal-paths))) eccentricity))))))
+                  traversal-paths (traversal-paths graph vertex)]
+              (is (>= (last (sort (map path-length traversal-paths))) eccentricity)))))
 
 (comment
   (djikstras-algorithm-finds-a-path-between-two-vertices)

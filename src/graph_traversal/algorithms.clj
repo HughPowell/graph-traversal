@@ -1,23 +1,36 @@
 (ns graph-traversal.algorithms)
 
-(defn- path-length
-  ([path]
-   (apply + (map second path)))
-  ([graph path]
-   (->> path
-        (partition 2 1)
-        (map (fn [[from to]] (->> from
-                                  (get graph)
-                                  (filter (fn [[vertex]] (= vertex to)))
-                                  first)))
-        path-length)))
+(defn- path-length [path]
+  (apply + (map second path)))
 
 (defn- next-vertex [unvisited tentative-paths]
   (->> tentative-paths
-       (remove (fn [[_vertex path]] (= :infinity path)))
        (sort-by (fn [[_vertex path]] (path-length path)))
        (drop-while (fn [[vertex]] (not (contains? unvisited vertex))))
+       (drop-while (fn [[_vertex path]] (= ##Inf (path-length path))))
        ffirst))
+
+(defn- djikstras* [graph start finish]
+  (loop [unvisited (set (keys graph))
+         tentative-paths (assoc (into {} (map (fn [k] [k [[start ##Inf]]]) (keys graph))) start [[start 0]])]
+    (let [current (next-vertex unvisited tentative-paths)]
+      (cond
+        (= finish current) (get tentative-paths current)
+        (nil? current) [[start 0] [finish ##Inf]]
+        :else (let [path-to-current (get tentative-paths current)]
+                (->> current
+                     (get graph)
+                     (filter (fn [[k]] (contains? unvisited k)))
+                     (map (fn [[vertex _distance :as edge]]
+                            [vertex
+                             (let [tentative-path-to-vertex (get tentative-paths vertex)
+                                   potential-path-to-vertex (conj path-to-current edge)]
+                               (if (< (path-length potential-path-to-vertex)
+                                      (path-length tentative-path-to-vertex))
+                                 potential-path-to-vertex
+                                 tentative-path-to-vertex))]))
+                     (into tentative-paths)
+                     (recur (disj unvisited current))))))))
 
 (defn djikstras
   "Determines the shortest path between start and finish in graph using
@@ -35,7 +48,7 @@
               :4})
   => (:1 :3 :4)
 
-  If there is no path between start and finish then :infinity is returned.
+  If there is no path between start and finish then an empty vector is returned.
 
   E.g.
   (djikstras {:1 [[:2 1] [:3 2]]
@@ -44,35 +57,12 @@
               :4 []
               :4
               :1})
-  => :infinity
+  => []
   "
   [graph start finish]
-  (loop [unvisited (set (keys graph))
-         tentative-paths (assoc (into {} (map (fn [k] [k :infinity]) (keys graph))) start [[start 0]])]
-    (let [current (next-vertex unvisited tentative-paths)]
-      (cond
-        (= finish current) (map first (get tentative-paths current))
-        (nil? current) :infinity
-        :else (let [path-to-current (get tentative-paths current)]
-                (->> current
-                     (get graph)
-                     (filter (fn [[k]] (contains? unvisited k)))
-                     (map (fn [[vertex _distance :as edge]]
-                            [vertex
-                             (let [tentative-path-to-vertex (get tentative-paths vertex)
-                                   potential-path-to-vertex (conj path-to-current edge)]
-                               (cond
-                                 (= :infinity tentative-path-to-vertex)
-                                 potential-path-to-vertex
-
-                                 (< (path-length potential-path-to-vertex)
-                                    (path-length tentative-path-to-vertex))
-                                 potential-path-to-vertex
-
-                                 :else
-                                 tentative-path-to-vertex))]))
-                     (into tentative-paths)
-                     (recur (disj unvisited current))))))))
+  (let [path (djikstras* graph start finish)
+        path-length' (path-length path)]
+    (if (= path-length' ##Inf) [] (map first path))))
 
 (defn eccentricity
   "Calculate the [eccentricity](https://en.wikipedia.org/wiki/Distance_(graph_theory)#Related_concepts)
@@ -87,13 +77,11 @@
   => 4
   "
   [graph vertex]
-  (let [paths (map #(djikstras graph vertex %) (keys graph))]
-    (if (contains? (set paths) :infinity)
-      :infinity
-      (->> paths
-           (map #(path-length graph %))
-           sort
-           last))))
+  (let [paths (map #(djikstras* graph vertex %) (keys graph))]
+    (->> paths
+         (map #(path-length %))
+         sort
+         last)))
 
 (comment
   (djikstras {:1 [[:2 1] [:3 2]],
