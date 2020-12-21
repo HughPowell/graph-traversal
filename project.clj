@@ -6,8 +6,9 @@
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/data.generators "1.0.0"]
                  [expound "0.8.7"]]
-  :repl-options {:init-ns graph-traversal.algorithms}
+  :repl-options {:init-ns dev.repl}
   :profiles {:test {:dependencies [[org.clojure/test.check "1.1.0"]
                                    [com.gfredericks/test.chuck "0.2.10"]
-                                   [lambdaisland/kaocha "1.0.732"]]}}
+                                   [lambdaisland/kaocha "1.0.732"]]}
+             :repl [:test]}
   :aliases {"kaocha" ["with-profile" "+test" "run" "-m" "kaocha.runner"]})

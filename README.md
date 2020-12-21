@@ -12,14 +12,13 @@ Designed to be run from the REPL,
 lein repl
 ```
 
-There are 2 namespaces, `graph-traversal.graph` and `graph-traversal.algorithm`.
+The `dev.repl` namespace (the default repl namespace) will load in all of the
+required functions (and tests).
 
 To generate a random graph with 5 vertices and 10 edges
 
 ```clojure
-(require '[graph-traversal.graph :as graph])
-
-(graph/random-graph 5 10)
+(random-graph 5 10)
 ```
 
 To find the shortest path between two vertices using Djikstra's algorithm
@@ -44,17 +43,17 @@ run the tests use the `kaocha` script in the `./bin` directory
 ./bin/kaocha
 ```
 
-or with the REPL
+or within the REPL
 
 ```clojure
-lein with-profile +test repl
-
-=> (require '[kaocha.repl :as kaocha])
-nil
-=> (kaocha/run :property)
+(run :property)
+```
+or
+```clojure
+(run-all)
 ```
 
-Alternatively you can use the  lein test runner.
+Alternatively you can use the Clojure test runner.
 
 ```shell
 lein test
