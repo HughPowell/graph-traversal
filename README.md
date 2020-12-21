@@ -34,6 +34,17 @@ To find the shortest path between two vertices using Djikstra's algorithm
 ```
 If there is no path between the start and finish vertices then `:inifinty` is returned.
 
+To find the eccentricity of a vertex in a graph
+
+```clojure
+(eccentricity {:1 [[:2 1] [:3 2]]
+               :2 [[:4 4]]
+               :3 [[:4 2]]
+               :4 []}
+               :1)
+=> 4
+```
+
 ## Tests
 
 [Kaocha](https://github.com/lambdaisland/kaocha) is used as the primary test runner. To

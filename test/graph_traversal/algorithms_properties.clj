@@ -103,5 +103,43 @@
                 (is (not (shorter-path? graph start finish path)))
                 (is (= :infinity path))))))
 
+(defn traversal [graph start]
+  (loop [frontier [start]
+         explored #{}
+         paths {start [[start 0]]}]
+    (let [current (peek frontier)
+          unexplored-vertices (remove (fn [[vertex]] (contains? explored vertex)) (get graph current))]
+      (if (empty? frontier)
+        (vals paths)
+        (recur
+          (into (pop frontier) (map first unexplored-vertices))
+          (conj explored current)
+          (->> unexplored-vertices
+               (map (fn [[vertex :as edge]] [vertex (conj (get paths current) edge)]))
+               (into paths)))))))
+
+(deftest the-eccentricity-of-a-vertex
+
+  ;; TODO: I _think_ these don't provide complete coverage. Are there properties that would?
+  ;; TODO: This test is a little on the slow side. What optimisations are possible?
+
+  (checking "is infinite if the graph is disconnected and not if it isn't" 100
+            [graph graph-gen
+             vertex (test-check-gen/elements (keys graph))]
+            (let [eccentricity (sut/eccentricity graph vertex)]
+              (if (every? #(connected? graph vertex %) (keys graph))
+                (is (not (= :infinity eccentricity)))
+                (is (= :infinity eccentricity)))))
+
+  (checking "is at most as long as the longest path with the fewest edges" 100
+            [graph graph-gen
+             vertex (test-check-gen/elements (keys graph))]
+            (let [eccentricity (sut/eccentricity graph vertex)
+                  traversal-paths (traversal graph vertex)]
+              (if (= :infinity eccentricity)
+                (is (> (count (keys graph)) (count (set (mapcat #(map first %) traversal-paths)))))
+                (is (>= (last (sort (map path-length traversal-paths))) eccentricity))))))
+
 (comment
-  (djikstras-algorithm-finds-a-path-between-two-vertices))
+  (djikstras-algorithm-finds-a-path-between-two-vertices)
+  (the-eccentricity-of-a-vertex))

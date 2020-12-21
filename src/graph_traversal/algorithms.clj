@@ -1,7 +1,16 @@
 (ns graph-traversal.algorithms)
 
-(defn- path-length [path]
-  (apply + (map second path)))
+(defn- path-length
+  ([path]
+   (apply + (map second path)))
+  ([graph path]
+   (->> path
+        (partition 2 1)
+        (map (fn [[from to]] (->> from
+                                  (get graph)
+                                  (filter (fn [[vertex]] (= vertex to)))
+                                  first)))
+        path-length)))
 
 (defn- next-vertex [unvisited tentative-paths]
   (->> tentative-paths
@@ -65,10 +74,37 @@
                      (into tentative-paths)
                      (recur (disj unvisited current))))))))
 
+(defn eccentricity
+  "Calculate the [eccentricity](https://en.wikipedia.org/wiki/Distance_(graph_theory)#Related_concepts)
+  of the vertex in the graph.
+
+  E.g.
+  (eccentricity {:1 [[:2 1] [:3 2]],
+                 :2 [[:4 4]],
+                 :3 [[:4 2]],
+                 :4 []}
+                :1)
+  => 4
+  "
+  [graph vertex]
+  (let [paths (map #(djikstras graph vertex %) (keys graph))]
+    (if (contains? (set paths) :infinity)
+      :infinity
+      (->> paths
+           (map #(path-length graph %))
+           sort
+           last))))
+
 (comment
   (djikstras {:1 [[:2 1] [:3 2]],
               :2 [[:4 4]],
               :3 [[:4 2]],
               :4 []}
              :1
-             :4))
+             :4)
+
+  (eccentricity {:1 [[:2 1] [:3 2]],
+                 :2 [[:4 4]],
+                 :3 [[:4 2]],
+                 :4 []}
+                :1))
