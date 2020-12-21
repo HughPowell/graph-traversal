@@ -22,6 +22,44 @@ To generate a random graph with 5 vertices and 10 edges
 (graph/random-graph 5 10)
 ```
 
+To find the shortest path between two vertices using Djikstra's algorithm
+
+```clojure
+(djikstras {:1 [[:2 1] [:3 2]]
+            :2 [[:4 4]]
+            :3 [[:4 2]]
+            :4 []
+            :1
+            :4})
+=> (:1 :3 :4)
+```
+If there is no path between the start and finish vertices then `:inifinty` is returned.
+
+## Tests
+
+[Kaocha](https://github.com/lambdaisland/kaocha) is used as the primary test runner. To
+run the tests use the `kaocha` script in the `./bin` directory
+
+```shell
+./bin/kaocha
+```
+
+or with the REPL
+
+```clojure
+lein with-profile +test repl
+
+=> (require '[kaocha.repl :as kaocha])
+nil
+=> (kaocha/run :property)
+```
+
+Alternatively you can use the  lein test runner.
+
+```shell
+lein test
+```
+
 ## License
 
 Copyright © 2020 FIXME
