@@ -1,8 +1,8 @@
 (ns graph-traversal.graph
   (:require [clojure.spec.alpha :as spec]
             [clojure.data.generators :as data-gen]
-            [expound.alpha :as expound]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [graph-traversal.validation :as validation]))
 
 (spec/def ::edges nat-int?)
 (spec/def ::vertices (spec/and pos-int? #(< % Integer/MAX_VALUE)))
@@ -39,7 +39,7 @@
 
 (defn- add-weights [graph]
   (->> graph
-       (map (fn [[vertex edges]] [vertex (set (map (fn [edge] [edge (Math/abs (data-gen/byte))]) edges))]))
+       (map (fn [[vertex edges]] [vertex (set (map (fn [edge] [edge (inc (Math/abs (data-gen/byte)))]) edges))]))
        (into {})))
 
 (defn random-graph
@@ -58,9 +58,7 @@
       :C #{[:D 6]}
       :D #{}}"
   [vertices edges]
-  (when-not (spec/valid? ::random-graph [vertices edges])
-    (throw (ex-info (expound/expound-str ::random-graph [vertices edges])
-                    (spec/explain-data ::random-graph [vertices edges]))))
+  (validation/validate ::random-graph [vertices edges])
   (let [vertices' (->> (iterate #(conj % (data-gen/keyword)) #{})
                        (drop-while #(> vertices (count %)))
                        first)

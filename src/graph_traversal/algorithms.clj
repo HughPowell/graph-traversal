@@ -1,4 +1,6 @@
-(ns graph-traversal.algorithms)
+(ns graph-traversal.algorithms
+  (:require [clojure.spec.alpha :as spec]
+            [graph-traversal.validation :as validation]))
 
 (defn- path-length [path]
   (apply + (map second path)))
@@ -32,6 +34,17 @@
                      (into tentative-paths)
                      (recur (disj unvisited current))))))))
 
+(spec/def ::vertex some?)
+
+(spec/def ::edge (spec/tuple some? pos?))
+(spec/def ::edges (spec/coll-of ::edge))
+(spec/def ::graph (spec/map-of some? ::edges :min-count 1))
+
+(spec/def ::djikstras-arguments
+  (spec/and (spec/tuple ::graph ::vertex ::vertex)
+            (fn [[graph start]] (contains? graph start))
+            (fn [[graph _ finish]] (contains? graph finish))))
+
 (defn djikstras
   "Determines the shortest path between start and finish in graph using
   [Djikstra's algorithm](https://en.wikipedia.org/wiki/Dijkstra%27s_algorithm).
@@ -60,9 +73,14 @@
   => []
   "
   [graph start finish]
+  (validation/validate ::djikstras-arguments [graph start finish])
   (let [path (djikstras* graph start finish)
         path-length' (path-length path)]
     (if (= path-length' ##Inf) [] (map first path))))
+
+(spec/def ::eccentricity-arguments
+  (spec/and (spec/tuple ::graph ::vertex)
+            (fn [[graph start]] (contains? graph start))))
 
 (defn eccentricity
   "Calculate the [eccentricity](https://en.wikipedia.org/wiki/Distance_(graph_theory)#Related_concepts)
@@ -77,6 +95,7 @@
   => 4
   "
   [graph vertex]
+  (validation/validate ::eccentricity-arguments [graph vertex])
   (let [paths (map #(djikstras* graph vertex %) (keys graph))]
     (->> paths
          (map #(path-length %))
