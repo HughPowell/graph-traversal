@@ -9,8 +9,17 @@
             [graph-traversal.test-concerns :as test-concerns])
   (:import (java.util Random)))
 
-(defn path-length [path]
-  (apply + (map second path)))
+(defn path-length
+  ([path]
+   (apply + (map second path)))
+  ([graph path]
+   (->> path
+        (partition 2 1)
+        (map (fn [[from to]] (->> from
+                                  (get graph)
+                                  (filter (fn [[vertex]] (= vertex to)))
+                                  first)))
+        path-length)))
 
 (defn connected? [graph start finish]
   (contains? (set (test-concerns/breadth-first-traverse graph start)) finish))
@@ -21,27 +30,29 @@
          (contains? vertices finish))))
 
 (defn shorter-path? [graph start finish prospective-path]
-  (let [prospective-path-length (->> prospective-path
-                                     (partition 2 1)
-                                     (map (fn [[from to]] (->> from
-                                                               (get graph)
-                                                               (filter (fn [[vertex]] (= vertex to)))
-                                                               first)))
-                                     path-length)]
+  (let [prospective-path-length (path-length graph prospective-path)]
     (loop [paths (map (fn [edge] [[start 0] edge]) (get graph start))]
       (cond
-        (empty? paths) false
-        (some #(< (path-length %) prospective-path-length) (filter #(path-contains? % start finish) paths)) true
-        :else (recur
-                (mapcat (fn [path]
-                          (->> path
-                               last
-                               first
-                               (get graph)
-                               (map #(conj path %))
-                               (filter (fn [path] (< (path-length path) prospective-path-length)))
-                               (filter (fn [path] (= (count path) (count (set path)))))))
-                        paths))))))
+        (empty? paths)
+        false
+
+        (->> paths
+             (filter #(path-contains? % start finish))
+             (some #(< (path-length %) prospective-path-length)))
+        true
+
+        :else
+        (recur
+          (mapcat (fn [path]
+                    (->> path
+                         last
+                         first
+                         (get graph)
+                         (map #(conj path %))
+                         (filter (fn [path] (< (path-length path) prospective-path-length)))
+                         (filter (fn [path] (= (count path) (count (set path)))))
+                         seq))
+                  paths))))))
 
 (def graph-gen
   (test-check-gen/let [[vertices edges] test-concerns/graph-attributes
