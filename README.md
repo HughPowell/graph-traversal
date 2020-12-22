@@ -46,6 +46,16 @@ To find the eccentricity of a vertex in a graph
 => 4
 ```
 
+To find the radius of a graph
+
+```clojure
+(radius {:1 [[:2 1] [:3 2]]
+         :2 [[:4 4]]
+         :3 [[:4 2]]
+         :4 []})
+=> 4
+```
+
 ## Tests
 
 [Kaocha](https://github.com/lambdaisland/kaocha) is used as the primary test runner. To

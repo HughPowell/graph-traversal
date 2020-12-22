@@ -103,16 +103,32 @@
        sort
        last))
 
+(defn radius
+  "Calculate the [radius](https://en.wikipedia.org/wiki/Distance_(graph_theory)#Related_concepts)
+  of the graph.
+
+  E.g.
+  (radius {:1 [[:2 1] [:3 2]],
+           :2 [[:4 4]],
+           :3 [[:4 2]],
+           :4 []})
+  => 4
+  "
+  [graph]
+  (validation/validate ::graph graph)
+  (->> graph
+       keys
+       (map #(eccentricity graph %))
+       (apply min)))
+
 (comment
-  (djikstras {:1 [[:2 1] [:3 2]],
+  (def graph {:1 [[:2 1] [:3 2]],
               :2 [[:4 4]],
               :3 [[:4 2]],
-              :4 []}
-             :1
-             :4)
+              :4 []})
 
-  (eccentricity {:1 [[:2 1] [:3 2]],
-                 :2 [[:4 4]],
-                 :3 [[:4 2]],
-                 :4 []}
-                :1))
+  (djikstras graph :1 :4)
+
+  (eccentricity graph :1)
+
+  (radius graph))

@@ -97,11 +97,12 @@
 (defn traversal-paths [graph start]
   (loop [frontier [start]
          explored #{}
-         paths (assoc (into {} (map (fn [vertex] [vertex [[start ##Inf]]]) (keys graph))) start [[start 0]])]
+         paths {start [[start 0]]}]
+    paths
     (let [current (peek frontier)
           unexplored-vertices (remove (fn [[vertex]] (contains? explored vertex)) (get graph current))]
       (if (empty? frontier)
-        (vals paths)
+        (map (fn [[vertex]] (get paths vertex [[vertex ##Inf]])) graph)
         (recur
           (into (pop frontier) (map first unexplored-vertices))
           (conj explored current)
@@ -140,6 +141,35 @@
               (is (>= (last (sort (map path-length traversal-paths)))
                       eccentricity)))))
 
+(deftest the-radius-of-a-graph
+
+  ;; TODO: I _think_ these don't provide complete coverage.
+  ;; - Are there properties that would?
+  ;; - Is this an abuse of property based testing?
+  ;; TODO: This test is too slow, so the number of runs has been decreased. What optimisations are possible?
+
+  (let [test-runs 30]
+
+    (checking "is zero if there is only one vertex and positive otherwise" test-runs
+              [graph graph-gen]
+              (let [radius (sut/radius graph)]
+                (if (= 1 (count graph))
+                  (is (zero? radius))
+                  (is (pos? radius)))))
+
+    (checking "is never infinite" test-runs
+              [graph graph-gen]
+              (is (not= ##Inf (sut/radius graph))))
+
+    (checking "is at most the length of the shortest path where the path is the shortest distance between any two vertices" test-runs
+              [graph graph-gen]
+              (let [radius (sut/radius graph)
+                    traversal-paths-per-vertex (map #(traversal-paths graph %) (keys graph))
+                    longest-path-from-vertex (map #(last (sort (map path-length %))) traversal-paths-per-vertex)]
+                (is (>= (apply min longest-path-from-vertex)
+                        radius))))))
+
 (comment
   (djikstras-algorithm-finds-a-path-between-two-vertices)
-  (the-eccentricity-of-a-vertex))
+  (the-eccentricity-of-a-vertex)
+  (the-radius-of-a-graph))
