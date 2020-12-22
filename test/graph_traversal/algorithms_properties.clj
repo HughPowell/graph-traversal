@@ -116,7 +116,15 @@
   ;; - Is this an abuse of property based testing?
   ;; TODO: This test is a little on the slow side. What optimisations are possible?
 
-  (checking "is infinite if the graph is disconnected and finite if it isn't" 100
+  (checking "is zero if there is only one vertex and positive otherwise" 100
+            [graph graph-gen
+             vertex (test-check-gen/elements (keys graph))]
+            (let [eccentricity (sut/eccentricity graph vertex)]
+              (if (= 1 (count graph))
+                (is (zero? eccentricity))
+                (is (pos? eccentricity)))))
+
+  (checking "is infinite if the graph is disconnected from the vertex and finite if it isn't" 100
             [graph graph-gen
              vertex (test-check-gen/elements (keys graph))]
             (let [eccentricity (sut/eccentricity graph vertex)]
