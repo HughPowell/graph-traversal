@@ -1,12 +1,10 @@
 (ns graph-traversal.graph-properties
-  (:require [clojure.data.generators :as data-gen]
-            [clojure.set :as set]
+  (:require [clojure.set :as set]
             [clojure.test :refer :all]
             [clojure.test.check.generators :as test-check-gen]
             [com.gfredericks.test.chuck.clojure-test :refer [checking]]
             [graph-traversal.graph :as sut]
-            [graph-traversal.test-concerns :as test-concerns])
-  (:import (java.util Random)))
+            [graph-traversal.test-concerns :as test-concerns]))
 
 (defn connected? [graph]
   (let [vertices (set (keys graph))
@@ -26,28 +24,24 @@
   (checking "has the given number of vertices" 100
             [[vertices edges] test-concerns/graph-attributes
              seed test-check-gen/nat]
-            (binding [data-gen/*rnd* (Random. seed)]
-              (is (= vertices
-                     (count (sut/random-graph vertices edges))))))
+            (is (= vertices
+                   (count (sut/random-graph seed vertices edges)))))
 
   (checking "has the given number of edges" 100
             [[vertices edges] test-concerns/graph-attributes
              seed test-check-gen/nat]
-            (binding [data-gen/*rnd* (Random. seed)]
-              (is (= edges
-                     (apply + (map count (vals (sut/random-graph vertices edges))))))))
+            (is (= edges
+                   (apply + (map count (vals (sut/random-graph seed vertices edges)))))))
 
   (checking "is connected" 100
             [[vertices edges] test-concerns/graph-attributes
              seed test-check-gen/nat]
-            (binding [data-gen/*rnd* (Random. seed)]
-              (is (connected? (sut/random-graph vertices edges)))))
+            (is (connected? seed (sut/random-graph seed vertices edges))))
 
   (checking "has weighted edges" 100
             [[vertices edges] test-concerns/graph-attributes
              seed test-check-gen/nat]
-            (binding [data-gen/*rnd* (Random. seed)]
-              (is (weighted-graph? (sut/random-graph vertices edges))))))
+            (is (weighted-graph? (sut/random-graph seed vertices edges)))))
 
 (comment
   (a-randomly-generated-graph))

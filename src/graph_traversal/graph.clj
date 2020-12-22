@@ -2,7 +2,8 @@
   (:require [clojure.spec.alpha :as spec]
             [clojure.data.generators :as data-gen]
             [clojure.set :as set]
-            [graph-traversal.validation :as validation]))
+            [graph-traversal.validation :as validation])
+  (:import (java.util Random)))
 
 (spec/def ::edges nat-int?)
 (spec/def ::vertices (spec/and pos-int? #(< % Integer/MAX_VALUE)))
@@ -57,16 +58,19 @@
       :B #{[:D 2]}
       :C #{[:D 6]}
       :D #{}}"
-  [vertices edges]
-  (validation/validate ::random-graph [vertices edges])
-  (let [vertices' (->> (iterate #(conj % (data-gen/keyword)) #{})
-                       (drop-while #(> vertices (count %)))
-                       first)
-        fully-connected-graph (fully-connected-graph vertices')
-        minimally-connected-graph (minimally-connected-graph vertices')]
-    (->> [fully-connected-graph minimally-connected-graph]
-         (iterate move-edge)
-         (map second)
-         (drop-while (fn [graph] (< (apply + (map count (vals graph))) edges)))
-         first
-         add-weights)))
+  ([vertices edges]
+   (validation/validate ::random-graph [vertices edges])
+   (let [vertices' (->> (iterate #(conj % (data-gen/keyword)) #{})
+                        (drop-while #(> vertices (count %)))
+                        first)
+         fully-connected-graph (fully-connected-graph vertices')
+         minimally-connected-graph (minimally-connected-graph vertices')]
+     (->> [fully-connected-graph minimally-connected-graph]
+          (iterate move-edge)
+          (map second)
+          (drop-while (fn [graph] (< (apply + (map count (vals graph))) edges)))
+          first
+          add-weights)))
+  ([seed vertices edges]
+   (binding [data-gen/*rnd* (Random. seed)]
+     (random-graph vertices edges))))
