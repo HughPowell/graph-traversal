@@ -1,10 +1,12 @@
 (ns graph-traversal.graph-properties
   (:require [clojure.set :as set]
+            [clojure.spec.alpha :as spec]
             [clojure.test :refer :all]
             [clojure.test.check.generators :as test-check-gen]
             [com.gfredericks.test.chuck.clojure-test :refer [checking]]
             [graph-traversal.graph :as sut]
-            [graph-traversal.test-concerns :as test-concerns]))
+            [graph-traversal.test-concerns :as test-concerns]
+            [graph-traversal.validation :as validation]))
 
 (defn connected? [seed graph]
   (let [vertices (set (keys graph))
@@ -41,7 +43,12 @@
   (checking "has weighted edges" 100
             [[vertices edges] test-concerns/graph-attributes
              seed test-check-gen/nat]
-            (is (weighted-graph? (sut/random-graph seed vertices edges)))))
+            (is (weighted-graph? (sut/random-graph seed vertices edges))))
+
+  (checking "is a graph" 100
+            [[vertices edges] test-concerns/graph-attributes
+             seed test-check-gen/nat]
+            (is (spec/valid? ::validation/graph (sut/random-graph seed vertices edges)))))
 
 (comment
   (a-randomly-generated-graph))

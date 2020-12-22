@@ -36,12 +36,8 @@
 
 (spec/def ::vertex some?)
 
-(spec/def ::edge (spec/tuple some? pos?))
-(spec/def ::edges (spec/coll-of ::edge))
-(spec/def ::graph (spec/map-of some? ::edges :min-count 1))
-
 (spec/def ::djikstras-arguments
-  (spec/and (spec/tuple ::graph ::vertex ::vertex)
+  (spec/and (spec/tuple ::validation/graph ::vertex ::vertex)
             (fn [[graph start]] (contains? graph start))
             (fn [[graph _ finish]] (contains? graph finish))))
 
@@ -79,7 +75,7 @@
     (if (= path-length' ##Inf) [] (map first path))))
 
 (spec/def ::eccentricity-arguments
-  (spec/and (spec/tuple ::graph ::vertex)
+  (spec/and (spec/tuple ::validation/graph ::vertex)
             (fn [[graph start]] (contains? graph start))))
 
 (defn eccentricity
@@ -121,7 +117,7 @@
   => 4
   "
   [graph]
-  (validation/validate ::graph graph)
+  (validation/validate ::validation/graph graph)
   (graph-geometry min graph))
 
 (defn diameter
@@ -136,7 +132,7 @@
   => ##Inf
   "
   [graph]
-  (validation/validate ::graph graph)
+  (validation/validate ::validation/graph graph)
   (graph-geometry max graph))
 
 (comment
