@@ -6,10 +6,10 @@
             [graph-traversal.graph :as sut]
             [graph-traversal.test-concerns :as test-concerns]))
 
-(defn connected? [graph]
+(defn connected? [seed graph]
   (let [vertices (set (keys graph))
         root-vertices (set/difference vertices (set (mapcat #(map first %) (vals graph))))
-        traverses (map #(set (test-concerns/breadth-first-traverse graph %))
+        traverses (map #(set (test-concerns/random-breadth-first-traversal seed graph %))
                        (or (seq root-vertices) (take 1 vertices)))]
     (boolean
       (and (= vertices (apply set/union traverses))

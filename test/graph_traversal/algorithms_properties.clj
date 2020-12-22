@@ -21,8 +21,8 @@
                                   first)))
         path-length)))
 
-(defn connected? [graph start finish]
-  (contains? (set (test-concerns/breadth-first-traverse graph start)) finish))
+(defn connected? [seed graph start finish]
+  (contains? (set (test-concerns/random-breadth-first-traversal seed graph start)) finish))
 
 (defn path-contains? [path start finish]
   (let [vertices (set (map first path))]
@@ -73,9 +73,10 @@
   (checking "that starts at the start and finishes at the finish when start and finished are connected" 100
             [graph graph-gen
              start (test-check-gen/elements (keys graph))
-             finish (test-check-gen/elements (keys graph))]
+             finish (test-check-gen/elements (keys graph))
+             seed test-check-gen/nat]
             (let [path (sut/djikstras graph start finish)]
-              (if (connected? graph start finish)
+              (if (connected? seed graph start finish)
                 (is (and (= start (first path))
                          (= finish (last path))))
                 (is (empty? path)))))
@@ -112,9 +113,9 @@
 
 (deftest the-eccentricity-of-a-vertex
 
-  ;; TODO: I _think_ these don't provide complete coverage.
-  ;; - Are there properties that would?
-  ;; - Is this an abuse of property based testing?
+  ;; NOTE: These properties won't catch all wrong results, but should catch most programmatic errors
+  ;; over a number of runs.
+  ;; Are there properties that will?
   ;; TODO: This test is a little on the slow side. What optimisations are possible?
 
   (checking "is zero if there is only one vertex and positive otherwise" 100
@@ -127,9 +128,10 @@
 
   (checking "is infinite if the graph is disconnected from the vertex and finite if it isn't" 100
             [graph graph-gen
-             vertex (test-check-gen/elements (keys graph))]
+             vertex (test-check-gen/elements (keys graph))
+             seed test-check-gen/nat]
             (let [eccentricity (sut/eccentricity graph vertex)]
-              (if (every? #(connected? graph vertex %) (keys graph))
+              (if (every? #(connected? seed graph vertex %) (keys graph))
                 (is (not= ##Inf eccentricity))
                 (is (= ##Inf eccentricity)))))
 
@@ -143,9 +145,9 @@
 
 (deftest the-radius-of-a-graph
 
-  ;; TODO: I _think_ these don't provide complete coverage.
-  ;; - Are there properties that would?
-  ;; - Is this an abuse of property based testing?
+  ;; NOTE: These properties won't catch all wrong results, but should catch most programmatic errors
+  ;; over a number of runs.
+  ;; Are there properties that will?
   ;; TODO: This test is too slow, so the number of runs has been decreased. What optimisations are possible?
 
   (let [test-runs 30]
@@ -169,23 +171,25 @@
                 (is (>= (apply min longest-path-from-vertex)
                         radius))))))
 
-(defn all-vertices-connected? [graph]
+(defn all-vertices-connected? [seed graph]
   ;; This is likely to run until the heat death of the universe for medium, highly connected graphs
   ;; I think the odds of that happening are slim given the random nature of the generated graphs
   (->> graph
        keys
        (mapcat (fn [start]
                  (map (fn [finish]
-                        (connected? graph start finish))
+                        (connected? seed graph start finish))
                       (keys graph))))
        (drop-while true?)
        empty?))
 
 (deftest the-diameter-of-a-graph
-  ;; TODO: I _think_ these don't provide complete coverage.
-  ;; - Are there properties that would?
-  ;; - Is this an abuse of property based testing?
+
+  ;; NOTE: These properties won't catch all wrong results, but should catch most programmatic errors
+  ;; over a number of runs.
+  ;; Are there properties that will?
   ;; TODO: This test is too slow, so the number of runs has been decreased. What optimisations are possible?
+
   (let [test-runs 35]
     (checking "is zero if there is only one vertex and positive otherwise" test-runs
               [graph graph-gen]
@@ -195,9 +199,10 @@
                   (is (pos? diameter)))))
 
     (checking "is infinite if any vertex cannot reach all other vertices" test-runs
-              [graph graph-gen]
+              [graph graph-gen
+               seed test-check-gen/nat]
               (let [diameter (sut/diameter graph)]
-                (if (all-vertices-connected? graph)
+                (if (all-vertices-connected? seed graph)
                   (is (not= ##Inf diameter))
                   (is (= ##Inf diameter)))))
 

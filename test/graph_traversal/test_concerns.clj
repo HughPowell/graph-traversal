@@ -1,21 +1,24 @@
 (ns graph-traversal.test-concerns
-  (:require [clojure.test.check.generators :as test-check-gen]
+  (:require [clojure.data.generators :as data-gen]
+            [clojure.test.check.generators :as test-check-gen]
             [clojure.spec.alpha :as spec]
             [graph-traversal.graph :as graph])
-  (:import (clojure.lang PersistentQueue)))
+  (:import (clojure.lang PersistentQueue)
+           (java.util Random)))
 
-(defn breadth-first-traverse [g s]
-  ((fn rec-bfs [explored frontier]
-     (lazy-seq
-       (if (empty? frontier)
-         nil
-         (let [v (peek frontier)
-               neighbors (map first (g v))]
-           (cons v (rec-bfs
-                     (into explored neighbors)
-                     (into (pop frontier) (remove explored neighbors))))))))
-   #{s}
-   (conj (PersistentQueue/EMPTY) s)))
+(defn random-breadth-first-traversal [seed graph start]
+  (binding [data-gen/*rnd* (Random. seed)]
+    ((fn rec-bfs [explored frontier]
+       (lazy-seq
+         (if (empty? frontier)
+           nil
+           (let [v (peek frontier)
+                 neighbors (map first (graph v))]
+             (cons v (rec-bfs
+                       (into explored neighbors)
+                       (into (pop frontier) (data-gen/shuffle (remove explored neighbors)))))))))
+     #{start}
+     (conj (PersistentQueue/EMPTY) start))))
 
 (def graph-attributes
   (test-check-gen/let [vertices (->> test-check-gen/nat
