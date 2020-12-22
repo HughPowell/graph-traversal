@@ -169,7 +169,48 @@
                 (is (>= (apply min longest-path-from-vertex)
                         radius))))))
 
+(defn all-vertices-connected? [graph]
+  ;; This is likely to run until the heat death of the universe for medium, highly connected graphs
+  ;; I think the odds of that happening are slim given the random nature of the generated graphs
+  (->> graph
+       keys
+       (mapcat (fn [start]
+                 (map (fn [finish]
+                        (connected? graph start finish))
+                      (keys graph))))
+       (drop-while true?)
+       empty?))
+
+(deftest the-diameter-of-a-graph
+  ;; TODO: I _think_ these don't provide complete coverage.
+  ;; - Are there properties that would?
+  ;; - Is this an abuse of property based testing?
+  ;; TODO: This test is too slow, so the number of runs has been decreased. What optimisations are possible?
+  (let [test-runs 35]
+    (checking "is zero if there is only one vertex and positive otherwise" test-runs
+              [graph graph-gen]
+              (let [diameter (sut/diameter graph)]
+                (if (= 1 (count graph))
+                  (is (zero? diameter))
+                  (is (pos? diameter)))))
+
+    (checking "is infinite if any vertex cannot reach all other vertices" test-runs
+              [graph graph-gen]
+              (let [diameter (sut/diameter graph)]
+                (if (all-vertices-connected? graph)
+                  (is (not= ##Inf diameter))
+                  (is (= ##Inf diameter)))))
+
+    (checking "is at most the length of the longest path where the path is the shortest distance between any two vertices" test-runs
+              [graph graph-gen]
+              (let [diameter (sut/diameter graph)
+                    traversal-paths-per-vertex (map #(traversal-paths graph %) (keys graph))
+                    longest-path-from-vertex (map #(last (sort (map path-length %))) traversal-paths-per-vertex)]
+                (is (>= (apply max longest-path-from-vertex)
+                        diameter))))))
+
 (comment
   (djikstras-algorithm-finds-a-path-between-two-vertices)
   (the-eccentricity-of-a-vertex)
-  (the-radius-of-a-graph))
+  (the-radius-of-a-graph)
+  (the-diameter-of-a-graph))

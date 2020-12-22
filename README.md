@@ -56,6 +56,16 @@ To find the radius of a graph
 => 4
 ```
 
+To find the diameter of a graph
+
+```clojure
+(diameter {:1 [[:2 1] [:3 2]]
+           :2 [[:4 4]]
+           :3 [[:4 2]]
+           :4 []})
+=> ##Inf
+```
+
 ## Tests
 
 [Kaocha](https://github.com/lambdaisland/kaocha) is used as the primary test runner. To

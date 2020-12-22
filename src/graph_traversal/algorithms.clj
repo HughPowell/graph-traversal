@@ -103,6 +103,12 @@
        sort
        last))
 
+(defn- graph-geometry [f graph]
+  (->> graph
+       keys
+       (map #(eccentricity graph %))
+       (apply f)))
+
 (defn radius
   "Calculate the [radius](https://en.wikipedia.org/wiki/Distance_(graph_theory)#Related_concepts)
   of the graph.
@@ -116,10 +122,22 @@
   "
   [graph]
   (validation/validate ::graph graph)
-  (->> graph
-       keys
-       (map #(eccentricity graph %))
-       (apply min)))
+  (graph-geometry min graph))
+
+(defn diameter
+  "Calculate the [radius](https://en.wikipedia.org/wiki/Distance_(graph_theory)#Related_concepts)
+  of the graph.
+
+  E.g.
+  (diameter {:1 [[:2 1] [:3 2]],
+             :2 [[:4 4]],
+             :3 [[:4 2]],
+             :4 []})
+  => ##Inf
+  "
+  [graph]
+  (validation/validate ::graph graph)
+  (graph-geometry max graph))
 
 (comment
   (def graph {:1 [[:2 1] [:3 2]],
@@ -131,4 +149,6 @@
 
   (eccentricity graph :1)
 
-  (radius graph))
+  (radius graph)
+
+  (diameter graph))
