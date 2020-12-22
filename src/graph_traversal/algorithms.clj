@@ -96,11 +96,12 @@
   "
   [graph vertex]
   (validation/validate ::eccentricity-arguments [graph vertex])
-  (let [paths (map #(djikstras* graph vertex %) (keys graph))]
-    (->> paths
-         (map #(path-length %))
-         sort
-         last)))
+  (->> graph
+       keys
+       (map #(djikstras* graph vertex %))
+       (map #(path-length %))
+       sort
+       last))
 
 (comment
   (djikstras {:1 [[:2 1] [:3 2]],

@@ -111,7 +111,9 @@
 
 (deftest the-eccentricity-of-a-vertex
 
-  ;; TODO: I _think_ these don't provide complete coverage. Are there properties that would?
+  ;; TODO: I _think_ these don't provide complete coverage.
+  ;; - Are there properties that would?
+  ;; - Is this an abuse of property based testing?
   ;; TODO: This test is a little on the slow side. What optimisations are possible?
 
   (checking "is infinite if the graph is disconnected and finite if it isn't" 100
@@ -127,7 +129,8 @@
              vertex (test-check-gen/elements (keys graph))]
             (let [eccentricity (sut/eccentricity graph vertex)
                   traversal-paths (traversal-paths graph vertex)]
-              (is (>= (last (sort (map path-length traversal-paths))) eccentricity)))))
+              (is (>= (last (sort (map path-length traversal-paths)))
+                      eccentricity)))))
 
 (comment
   (djikstras-algorithm-finds-a-path-between-two-vertices)
